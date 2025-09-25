@@ -1,34 +1,72 @@
 # Plasma Engine Research
 
-Async research automation service powering Deep Research workflows, parallel search, and GraphRAG knowledge ingestion.
+## Overview
 
-## Stack
+**Plasma Engine Research** is the AI-powered research and knowledge management service. It implements:
 
-- Python 3.11, AsyncIO, Neo4j, Redis, Celery/Prefect (TBD)
-- Integrations: Perplexity, Exa, Tavily, custom crawlers
+- 🧠 **GraphRAG System**: Graph-based knowledge representation and retrieval
+- 🔍 **Semantic Search**: Vector embeddings with pgvector/Pinecone
+- 📚 **Document Processing**: Multi-format ingestion and parsing
+- 🔗 **Entity Extraction**: NER and relationship mapping
+- 💡 **Knowledge Synthesis**: AI-powered insights and summaries
+- 🎯 **Query Understanding**: Intent classification and query expansion
 
-## CI
+## Tech Stack
 
-Pull requests trigger the shared [lint-test](.github/workflows/ci.yml) and security scan workflows. CodeRabbit provides automated review feedback.
+- **Language**: Python 3.11
+- **Framework**: FastAPI
+- **AI/ML**: LangChain, LlamaIndex, OpenAI SDK
+- **Graph DB**: Neo4j for knowledge graphs
+- **Vector DB**: pgvector / Pinecone
+- **Queue**: Celery + Redis for async processing
+- **Storage**: S3-compatible for documents
 
-## Local Development
+## Quick Start
 
 ```bash
-git clone https://github.com/xkonjin/plasma-engine-research.git
-cd plasma-engine-research
+# Install dependencies
+pip install -r requirements.txt
 
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt  # temporary placeholder
+# Set up environment
+cp .env.example .env
+
+# Run migrations
+alembic upgrade head
+
+# Start development server
+uvicorn app.main:app --reload
+
+# Run tests
+pytest
+
+# Start Celery worker
+celery -A app.tasks worker --loglevel=info
 ```
 
-Start the shared Compose stack (see development handbook) to provision Neo4j/Redis/Postgres dependencies.
+## Architecture
 
-## Contribution Checklist
+```
+Documents → Ingestion → Processing → Knowledge Graph → Query Engine
+                ↓           ↓              ↓
+            Embeddings   Entities    Relationships
+```
 
-- [ ] Issue linked to Program board (PE-XX)
-- [ ] Lint/test locally before PR
-- [ ] Update documentation and ADRs when architecture changes
-- [ ] Ensure knowledge graph migrations are idempotent
+## Key Features
 
-Refer to the [Development Handbook](../plasma-engine-shared/docs/development-handbook.md) for environment details.
+- **Multi-modal RAG**: Text, code, images, tables
+- **Incremental Learning**: Continuous knowledge base updates
+- **Citation Tracking**: Source attribution for all responses
+- **Privacy-First**: Local embeddings option, data isolation
+
+## Development
+
+See [Development Handbook](../plasma-engine-shared/docs/development-handbook.md) for guidelines.
+
+## CI/CD
+
+This repository uses GitHub Actions for CI/CD. All PRs are automatically:
+- Linted and tested
+- Security scanned
+- Reviewed by CodeRabbit
+
+See `.github/workflows/ci.yml` for details.
