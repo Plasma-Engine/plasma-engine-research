@@ -1,0 +1,3 @@
+# Freeze to pyproject dependencies; editable install keeps single source of truth.
+-e .
+
