@@ -8,7 +8,7 @@ Every function carries descriptive comments to aid knowledge transfer.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import ResearchSettings
+from .config import ResearchSettings, get_settings
 
 
 def create_app(settings: ResearchSettings | None = None) -> FastAPI:
@@ -44,5 +44,5 @@ def create_app(settings: ResearchSettings | None = None) -> FastAPI:
     return app
 
 
-app = create_app()
+app = create_app(get_settings())
 

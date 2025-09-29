@@ -1,6 +1,5 @@
 """Performance tests for the Research service."""
 
-import asyncio
 import time
 from concurrent.futures import ThreadPoolExecutor
 import pytest
@@ -43,7 +42,7 @@ class TestHealthEndpointPerformance:
 
     @pytest.mark.performance
     @pytest.mark.benchmark
-    def test_health_endpoint_benchmark(self, benchmark):
+    def test_health_endpoint_benchmark(self, request):
         """Benchmark the health endpoint using pytest-benchmark."""
         app = create_app()
         client = TestClient(app)
@@ -53,6 +52,9 @@ class TestHealthEndpointPerformance:
             assert response.status_code == 200
             return response.json()
 
+        if not request.config.pluginmanager.hasplugin("benchmark"):
+            pytest.skip("pytest-benchmark plugin not installed")
+        benchmark = request.getfixturevalue("benchmark")
         # Benchmark the function
         result = benchmark(health_request)
         assert result["status"] == "ok"
@@ -70,7 +72,7 @@ class TestHealthEndpointPerformance:
     @pytest.mark.performance
     def test_memory_usage_under_load(self, client):
         """Test that memory usage remains stable under load."""
-        import psutil
+        psutil = pytest.importorskip("psutil")
         import os
 
         process = psutil.Process(os.getpid())
@@ -135,6 +137,8 @@ class TestApplicationPerformance:
     @pytest.mark.performance
     def test_sustained_load(self, client):
         """Test application under sustained load."""
+        import httpx
+
         duration = 5  # Run for 5 seconds
         start_time = time.perf_counter()
         request_count = 0
@@ -147,7 +151,7 @@ class TestApplicationPerformance:
                     request_count += 1
                 else:
                     errors += 1
-            except Exception:
+            except httpx.HTTPError:
                 errors += 1
 
         end_time = time.perf_counter()

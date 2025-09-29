@@ -24,8 +24,10 @@ class LenientEnvSettingsSource(EnvSettingsSource):
     def decode_complex_value(self, field_name: str, field: FieldInfo, value: Any) -> Any:
         if isinstance(value, str):
             try:
-                return json.loads(value)
-            except json.JSONDecodeError:
+                # Try to parse as JSON first (upstream behavior)
+                return super().decode_complex_value(field_name, field, value)
+            except (json.JSONDecodeError, ValueError):
+                # Fall back to raw string for lenient parsing
                 return value
 
         return super().decode_complex_value(field_name, field, value)
@@ -97,8 +99,10 @@ class ResearchSettings(BaseSettings):
             # Fall back to comma-separated values for ergonomic env vars.
             return [origin.strip() for origin in candidate.split(",") if origin.strip()]
 
-        # Defer to BaseSettings for anything else (e.g. None).
-        return raw_value
+        # Defer to BaseSettings for anything else (e.g. None), ensure list[str] return.
+        if isinstance(raw_value, list):
+            return [str(item) for item in raw_value]
+        return []
 
 
 @lru_cache

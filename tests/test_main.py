@@ -3,7 +3,6 @@
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from unittest.mock import patch
 
 from app.main import create_app
 from app.config import ResearchSettings
@@ -34,12 +33,8 @@ class TestCreateApp:
 
     def test_app_with_default_settings(self):
         """Test app creation with default settings when none provided."""
-        with patch('app.main.get_settings') as mock_get_settings:
-            mock_settings = ResearchSettings()
-            mock_get_settings.return_value = mock_settings
-
-            app = create_app()
-            assert app.title == mock_settings.app_name
+        app = create_app()
+        assert app.title == ResearchSettings().app_name
 
     def test_cors_middleware_configured(self, test_settings):
         """Test that CORS middleware is properly configured."""
@@ -49,13 +44,16 @@ class TestCreateApp:
         # We'll test this through the actual client
         client = TestClient(app)
 
+        origin = "http://localhost:3000"
         response = client.options("/health", headers={
-            "Origin": "http://localhost:3000",
+            "Origin": origin,
             "Access-Control-Request-Method": "GET"
         })
 
-        # Should not be rejected due to CORS
-        assert response.status_code != 403
+        # Should not be rejected due to CORS and must include CORS headers
+        assert response.status_code in (200, 204)
+        assert response.headers.get("access-control-allow-origin") == origin
+        assert "GET" in response.headers.get("access-control-allow-methods", "")
 
 
 class TestHealthEndpoint:
@@ -81,7 +79,7 @@ class TestHealthEndpoint:
         """Test that health endpoint returns JSON content type."""
         response = client.get("/health")
 
-        assert response.headers["content-type"] == "application/json"
+        assert response.headers["content-type"].startswith("application/json")
 
     def test_health_endpoint_no_auth_required(self, client):
         """Test that health endpoint doesn't require authentication."""
@@ -111,6 +109,7 @@ class TestCORSConfiguration:
         for origin in test_settings.cors_origins:
             response = client.get("/health", headers={"Origin": origin})
             assert response.status_code == 200
+            assert response.headers.get("access-control-allow-origin") == origin
 
     def test_cors_preflight_request(self, client):
         """Test CORS preflight OPTIONS request."""
@@ -129,8 +128,8 @@ class TestCORSConfiguration:
             "Origin": "http://localhost:3000"
         })
 
-        # Should include CORS headers
-        assert "access-control-allow-origin" in response.headers
+        # Should include CORS headers for the requesting origin
+        assert response.headers.get("access-control-allow-origin") == "http://localhost:3000"
 
 
 class TestApplicationIntegration:

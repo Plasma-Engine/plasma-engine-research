@@ -1,7 +1,6 @@
 """Tests for the configuration module."""
 
 import os
-import pytest
 from unittest.mock import patch
 
 from app.config import ResearchSettings, get_settings

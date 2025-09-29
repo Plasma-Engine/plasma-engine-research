@@ -17,8 +17,8 @@ SERVICE_ROOT = Path(__file__).resolve().parent.parent
 if str(SERVICE_ROOT) not in sys.path:
     sys.path.insert(0, str(SERVICE_ROOT))
 
-from app.config import ResearchSettings
-from app.main import create_app
+from app.config import ResearchSettings  # noqa: E402
+from app.main import create_app  # noqa: E402
 
 
 @pytest.fixture
@@ -41,42 +41,3 @@ def app(test_settings):
 def client(app):
     """Provide TestClient for the research service."""
     return TestClient(app)
-
-
-@pytest.fixture
-def mock_research_query():
-    """Provide a mock research query."""
-    return {
-        "query": "What are the latest developments in quantum computing?",
-        "max_results": 10,
-        "include_summary": True
-    }
-
-
-@pytest.fixture
-def mock_research_results():
-    """Provide mock research results."""
-    return {
-        "query": "quantum computing developments",
-        "results": [
-            {
-                "title": "Quantum Computing Breakthrough 2024",
-                "summary": "Major advancement in quantum error correction",
-                "url": "https://example.com/quantum-2024",
-                "relevance_score": 0.95,
-                "published_date": "2024-01-15T10:30:00Z",
-                "source": "Nature Quantum Information"
-            },
-            {
-                "title": "New Quantum Architecture",
-                "summary": "Revolutionary approach to quantum processing",
-                "url": "https://example.com/quantum-arch",
-                "relevance_score": 0.87,
-                "published_date": "2024-01-10T14:20:00Z",
-                "source": "Physical Review Letters"
-            }
-        ],
-        "total_results": 2,
-        "search_time": 1.23,
-        "confidence": 0.89
-    }

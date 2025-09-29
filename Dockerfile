@@ -44,7 +44,6 @@ FROM python:3.13-slim AS production
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PATH="/app/.venv/bin:$PATH" \
     APP_MODULE="app.main:app"
 
 # Install runtime dependencies and create non-root user
@@ -59,7 +58,7 @@ WORKDIR /app
 
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
-COPY --from=builder /usr/local/bin/ /usr/local/bin/
+COPY --from=builder /usr/local/bin/gunicorn /usr/local/bin/gunicorn
 
 # Copy application code
 COPY --chown=appuser:appuser app/ ./app/
@@ -87,15 +86,15 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the application with Gunicorn
-CMD ["gunicorn", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "1", \
-     "--worker-class", "uvicorn.workers.UvicornWorker", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-", \
-     "--log-level", "info", \
-     "app.main:app"]
+# Start the application with Gunicorn (using shell form to expand env vars)
+CMD ["/bin/sh", "-c", "exec gunicorn \
+  --bind 0.0.0.0:${PORT:-8000} \
+  --workers ${WORKERS:-1} \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --access-logfile - \
+  --error-logfile - \
+  --log-level ${LOG_LEVEL:-info} \
+  ${APP_MODULE}"]
 
 # Labels for metadata
 LABEL org.opencontainers.image.title="Plasma Engine Research" \
