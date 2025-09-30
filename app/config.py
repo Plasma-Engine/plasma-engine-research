@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from functools import lru_cache
-from typing import Any
+from typing import Any, List, Optional
 
 from pydantic import Field, field_validator
 from pydantic.fields import FieldInfo
@@ -62,18 +62,18 @@ class ResearchSettings(BaseSettings):
         )
 
     app_name: str = Field(default="plasma-engine-research", description="Human readable service name")
-    cors_origins: list[str] = Field(
+    cors_origins: List[str] = Field(
         default_factory=lambda: ["http://localhost:3000"],
         description="Origins allowed by CORS when the API is accessed from browsers",
     )
-    openai_api_key: str | None = Field(
+    openai_api_key: Optional[str] = Field(
         default=None,
         description="Optional key used by downstream research pipelines when calling OpenAI APIs",
     )
 
     @field_validator("cors_origins", mode="before")
     @classmethod
-    def _coerce_cors_origins(cls, raw_value: Any) -> list[str]:
+    def _coerce_cors_origins(cls, raw_value: Any) -> List[str]:
         """Allow environment overrides expressed as JSON arrays or comma strings."""
 
         # Short-circuit when the value is already a sequence of strings.
